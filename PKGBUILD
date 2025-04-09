@@ -9,8 +9,8 @@ _linuxprefix=linux612
 
 _module=vhba-module
 pkgname="${_linuxprefix}-${_module}"
-pkgver=20240917
-pkgrel=37
+pkgver=20250329
+pkgrel=1
 pkgdesc="Kernel module that emulates SCSI devices"
 arch=('x86_64')
 url="https://cdemu.sourceforge.io/"
@@ -20,7 +20,7 @@ makedepends=("${_linuxprefix}-headers")
 provides=("${_module}=$pkgver" "VHBA-MODULE")
 groups=("${_linuxprefix}-extramodules")
 source=("http://downloads.sourceforge.net/cdemu/${_module}-$pkgver.tar.xz")
-sha256sums=('ce34cbae2c36cef8d7d09c5f6bd42d6871b9b530bb70b4ca100f964823fe0e98')
+sha256sums=('a62a20d720ddf0cfe5a53228f4513d498d89c2ead9e9af0b1b6959ff8126075e')
 
 prepare() {
   cd "${_module}-$pkgver"
@@ -39,6 +39,5 @@ package() {
   cd "${_module}-$pkgver"
   install -Dm644 *.ko -t "$pkgdir/usr/lib/modules/${_kernver}/extramodules/"
 
-  find "$pkgdir" -name '*.ko' -exec strip --strip-debug {} +
-  find "$pkgdir" -name '*.ko' -exec xz {} +
+  find "$pkgdir" -name '*.ko' -exec zstd --rm -19 {} +
 }
