@@ -9,35 +9,29 @@ _linuxprefix=linux612
 
 _module=vhba-module
 pkgname="${_linuxprefix}-${_module}"
-pkgver=20250329
-pkgrel=67
-pkgdesc="Kernel module that emulates SCSI devices"
+pkgver=20260313
+pkgrel=1
+pkgdesc="Virtual SCSI adapter - Linux modules"
 arch=('x86_64')
 url="https://cdemu.sourceforge.io/"
 license=('GPL-2.0-or-later')
 depends=("${_linuxprefix}")
-makedepends=("${_linuxprefix}-headers")
+makedepends=("${_linuxprefix}-headers" "${_module}-dkms=$pkgver")
 provides=("${_module}=$pkgver" "VHBA-MODULE")
 groups=("${_linuxprefix}-extramodules")
-source=("http://downloads.sourceforge.net/cdemu/${_module}-$pkgver.tar.xz")
-sha256sums=('a62a20d720ddf0cfe5a53228f4513d498d89c2ead9e9af0b1b6959ff8126075e')
-
-prepare() {
-  cd "${_module}-$pkgver"
-}
+options=(!debug !strip)
 
 build() {
   _kernver="$(cat /usr/src/${_linuxprefix}/version)"
-
-  cd "${_module}-$pkgver"
-  make KERNELRELEASE="${_kernver}"
+  fakeroot dkms build --dkmstree "$srcdir" -m "${_module}/$pkgver" -k "${_kernver}"
 }
 
 package() {
   _kernver="$(cat /usr/src/${_linuxprefix}/version)"
+  _extramodules="/usr/lib/modules/${_kernver}/extramodules"
+  install -Dm644 -t "${pkgdir}${_extramodules}" \
+    "${_module}/$pkgver/${_kernver}/${CARCH}"/module/*.ko*
 
-  cd "${_module}-$pkgver"
-  install -Dm644 *.ko -t "$pkgdir/usr/lib/modules/${_kernver}/extramodules/"
-
+  # compress kernel modules
   find "$pkgdir" -name '*.ko' -exec zstd --rm -19 {} +
 }
